@@ -1,0 +1,136 @@
+services:
+  postgresql:
+    image: pgvector/pgvector:pg16
+    container_name: lobe-postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${LOBE_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${LOBE_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${LOBE_POSTGRES_DB}
+    volumes:
+      - lobe_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOBE_POSTGRES_USER} -d ${LOBE_POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+  minio:
+    image: minio/minio
+    container_name: lobe-minio
+    ports:
+      - "9000:9000"    # API Port
+      - "9001:9001"    # Console Port
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - lobe_minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=${LOBE_MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${LOBE_MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    restart: always
+
+  logto:
+    image: svhd/logto:latest
+    container_name: lobe-logto
+    ports:
+      - "3001:3001" # (Auth Service)
+      - "3002:3002" # (Admin Console)
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/api/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    environment:
+      - ENDPOINT=http://${LOCAL_IP}:3001
+      - ADMIN_ENDPOINT=http://${LOCAL_IP}:3002
+      - DB_URL=${LOBE_LOGTO_DB_URL}
+      - TRUST_PROXY_HEADER=true
+    entrypoint: 
+      - /bin/sh
+      - -c
+      - |
+        # 1. Attempt to seed (this won't overwrite if data exists)
+        echo "Seeding database..."
+        npm run cli db seed -- --swe
+        
+        # 2. Deploy alterations
+        echo "Deploying alterations..."
+        npm run alteration deploy
+        
+        # 3. Start the app
+        echo "Starting Logto..."
+        npm start
+
+  lobe-chat:
+    image: lobehub/lobe-chat-database
+    container_name: lobe-chat
+    ports:
+      - "3210:3210"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      logto:
+        condition: service_healthy
+    environment:
+      # Database
+      - DATABASE_URL=${LOBE_DB_URL}
+      - DATABASE_DRIVER=node
+      - NEXT_PUBLIC_SERVICE_MODE=server
+      # MinIO / S3
+      - S3_ACCESS_KEY_ID=${LOBE_MINIO_ROOT_USER}
+      - S3_SECRET_ACCESS_KEY=${LOBE_MINIO_ROOT_PASSWORD}
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=lobechat
+      - S3_PUBLIC_DOMAIN=http://localhost:9000
+      - S3_ENABLE_PATH_STYLE=1
+      - S3_SET_ACL=0
+      # Auth & Security
+      - KEY_VAULTS_SECRET=${LOBE_SECRET}
+      - NEXT_AUTH_SECRET=${LOBE_SECRET}
+      - ACCESS_CODE=${LOBE_PASS}
+      - NEXT_PUBLIC_ENABLE_NEXT_AUTH=1
+      - NEXT_AUTH_SSO_PROVIDERS=logto
+      - AUTH_LOGTO_ID=${LOBE_LOGTO_ID}
+      - AUTH_LOGTO_KEY=${LOBE_LOGTO_ID}
+      - AUTH_LOGTO_SECRET=${LOBE_LOGTO_SECRET}
+      - AUTH_LOGTO_ISSUER=http://${LOCAL_IP}:3001/oidc
+      - NEXTAUTH_URL=http://localhost:3210/api/auth
+      # AI Keys
+      - GOOGLE_API_KEY=${LOBE_GOOGLE_API_KEY}
+      - ANTHROPIC_API_KEY=${LOBE_ANTHROPIC_API_KEY}
+      # App Config
+      - APP_URL=http://localhost:3210
+      - NODE_ENV=production
+    
+    # Resource Limits for a 5-core / 8GB system
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'        # Allow up to 2 full cores for heavy RAG/Parsing
+          memory: 2G         # LobeChat is a heavy Next.js app; 2GB is the "safe" zone
+        reservations:
+          cpus: '0.5'        # Guarantee half a core for responsiveness
+          memory: 512M       # Minimum RAM to stay resident
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+    restart: always
+
+volumes:
+  lobe_minio_data:
+  lobe_postgres_data:
