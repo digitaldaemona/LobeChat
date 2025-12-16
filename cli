@@ -1,7 +1,5 @@
 #!/bin/bash
 
-SERVICE_NAME="lobe-chat"
-
 function usage() {
     echo "Usage: ./cli [up|down]"
     exit 1
@@ -10,13 +8,13 @@ function usage() {
 function func_up() {
     echo "Starting services..."
     # Build and start the container in detached mode
-    docker-compose up -d --build "$SERVICE_NAME"
+    docker compose -f docker-compose.yml up -d
 }
 
 function func_down() {
     echo "Stopping services and cleaning up..."
     # Stop and remove containers and networks
-    docker-compose down
+    docker compose -f docker-compose.yml down --remove-orphans
 
     # Garbage Collection: Remove dangling images and containers
     echo "Performing garbage collection (pruning dangling images/containers)..."
