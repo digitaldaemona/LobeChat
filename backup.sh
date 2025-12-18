@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VOLUME_NAMES=("lobe_postgres_data" "lobe_minio_data")
+VOLUME_NAMES=("lobechat_lobe_postgres_data" "lobechat_lobe_minio_data")
 
 # Load .env
 ENV_FILE=".env"
