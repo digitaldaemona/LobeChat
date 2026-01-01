@@ -1,0 +1,20 @@
+{
+  "identifier": "github-repo-access",
+  "name": "GitHub Repository Access",
+  "description": "Browse and read files from GitHub repositories",
+  "version": "1.0.0",
+  "author": "Jarran Pedersen",
+  "homepage": "",
+  "openapi": "/openapi.json",
+  "apiBase": "/api",
+  "settings": [
+    {
+      "key": "githubToken",
+      "name": "GitHub Token",
+      "description": "Optional GitHub Personal Access Token",
+      "type": "string",
+      "defaultValue": "",
+      "secure": true
+    }
+  ]
+}
