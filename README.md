@@ -3,7 +3,7 @@
 ## Introduction
 This is a small project that uses docker to host a local instance of LobeChat, enabling the additional power a wrapper like LobeChat provides (role configuration, file context, etc.) around the user's existing AI models (such as Gemini or Claude, linked with API keys).
 
-In addition to the LobeChat container, 3 other containers are created to handle data storage and auth (postgres, minio, and logto). 
+In addition to the LobeChat container, 4 other containers are created to handle search, data storage and auth (searxng, postgres, minio, logto). 
 
 ## Infrastructure Setup
 
@@ -54,17 +54,17 @@ Next, the logto instance must be accessed and a user created, using the followin
 7. run `./cli down` and `./cli up` so that lobe-chat reads the logto app id and secret
 
 ### Model Setup
-LocalLobeChat is set up to use OpenAI, Gemini, and Claude models through API keys. However, I also run a local model for free turns. Setup steps are listed below:
+LocalLobeChat is set up to use OpenAI, Gemini, and Claude models through API keys. However, I also run 2 local models for free turns. Setup steps are listed below:
 ```
 brew install ollama
-ollama serve
-ollama pull qwen2.5:14b-instruct-q4_K_M
+brew services start ollama
+ollama pull llama3.1:8b
+ollama pull deepseek-r1:8b
 ```
 1. Open LobeChat → Settings → Language Model
 2. Click "Add Model Provider"
 3. Select "Ollama"
 4. Set endpoint: http://localhost:11434
-5. Save and select qwen2.5:14b-instruct-q4_K_M in your assistant
 
 ### Accessing LobeChat
 Now that everything is set up, simply access LobeChat at http://localhost:3210 and sign in using the created user credentials. From here, LobeChat can also be installed as a PWA.

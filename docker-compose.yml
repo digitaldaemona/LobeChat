@@ -72,6 +72,17 @@ services:
         echo "Starting Logto..."
         npm start
 
+  searxng:
+    image: searxng/searxng:latest
+    container_name: lobe-searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - SEARXNG_BASE_URL=http://searxng:8080/
+    restart: always
+
   lobe-chat:
     image: lobehub/lobe-chat-database
     container_name: lobe-chat
@@ -84,6 +95,8 @@ services:
         condition: service_healthy
       logto:
         condition: service_healthy
+      searxng:
+        condition: service_started
     environment:
       # Database
       - DATABASE_URL=${LOBE_DB_URL}
@@ -112,10 +125,13 @@ services:
       - OPENAI_API_KEY=${LOBE_OPENAI_API_KEY}
       - GOOGLE_API_KEY=${LOBE_GOOGLE_API_KEY}
       - ANTHROPIC_API_KEY=${LOBE_ANTHROPIC_API_KEY}
+      # Search
+      - SEARXNG_URL=http://searxng:8080
+      - SEARCH_SERVICE_PROVIDER=searxng
       # App Config
       - APP_URL=http://lobe-chat:3210
       - NODE_ENV=production
-      # >>> REQUIRED FOR KNOWLEDGE BASE INGESTION <<<
+      # REQUIRED FOR KNOWLEDGE BASE INGESTION
       - DEFAULT_FILES_CONFIG="embedding_model=openai/text-embedding-ada-002"
       - ENABLE_KNOWLEDGE_BASE=1
     
