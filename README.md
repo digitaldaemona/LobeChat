@@ -66,6 +66,8 @@ ollama pull deepseek-r1:8b
 3. Select "Ollama"
 4. Set endpoint: http://localhost:11434
 
+These are the steps to running a model on the current computer, but my setup actually runs the models on my PC and then has LobeChat connect using the local network ip endpoint. 
+
 ### Accessing LobeChat
 Now that everything is set up, simply access LobeChat at http://localhost:3210 and sign in using the created user credentials. From here, LobeChat can also be installed as a PWA.
 
