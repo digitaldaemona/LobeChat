@@ -105,9 +105,9 @@ services:
       # MinIO / S3
       - S3_ACCESS_KEY_ID=${LOBE_MINIO_ROOT_USER}
       - S3_SECRET_ACCESS_KEY=${LOBE_MINIO_ROOT_PASSWORD}
-      - S3_ENDPOINT=http://minio:9000
+      - S3_ENDPOINT=http://${LOCAL_IP}:9000
       - S3_BUCKET=lobechat
-      - S3_PUBLIC_DOMAIN=http://minio:9000
+      - S3_PUBLIC_DOMAIN=http://${LOCAL_IP}:9000
       - S3_ENABLE_PATH_STYLE=1
       - S3_SET_ACL=0
       # Auth & Security

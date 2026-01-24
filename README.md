@@ -7,11 +7,26 @@ In addition to the LobeChat container, 4 other containers are created to handle 
 
 ## Infrastructure Setup
 
+### Env Vars & Local IP Fix
+Create a `.env` file and fill it out based on `.env.example`. Most fields should be straightforward with a couple exceptions.
+
+1. `LOBE_LOGTO_ID` & `LOBE_LOGTO_SECRET`: These are left empty for now and filled out after logto is launched the first time.
+2. `LOCAL_IP`: This should be the ip of the host machine on the local network, such as `192.168.0.0`. The reason for this is specifically because of how Lobe Chat connects to Minio. Due to issues with how the `S3_ENDPOINT` and `S3_PUBLIC_DOMAIN` variables are used, they must use local ip instead of service name. 
+
+**Important**: As local ip changes, the minio connection may periodically be broken. If files are not properly uploading (timing out or erroring) then update the local ip as it has likely changed. Then run the following command:
+```
+./cli.sh up-force
+```
+
 ### CLI
 The following commands are used to deploy and remove the lobe chat service:
 ```
 ./cli.sh up
 ./cli.sh down
+```
+The following command is used to update the lobe chat service:
+```
+./cli.sh up-force
 ```
 The following command is used to back up the persistent data for cloud storage:
 ```
