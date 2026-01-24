@@ -119,7 +119,7 @@ services:
       - AUTH_LOGTO_ID=${LOBE_LOGTO_ID}
       - AUTH_LOGTO_KEY=${LOBE_LOGTO_ID}
       - AUTH_LOGTO_SECRET=${LOBE_LOGTO_SECRET}
-      - AUTH_LOGTO_ISSUER=http://localhost:3001/oidc
+      - AUTH_LOGTO_ISSUER=http://logto:3001/oidc
       - NEXTAUTH_URL=http://lobe-chat:3210/api/auth
       # AI Keys
       - OPENAI_API_KEY=${LOBE_OPENAI_API_KEY}
